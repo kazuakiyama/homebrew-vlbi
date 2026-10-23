@@ -32,6 +32,11 @@ jobs:
           brew update
           # Clone the checked-out commit so pull requests test their own formula.
           brew tap --custom-remote kazuakiyama/vlbi "$GITHUB_WORKSPACE"
+          if brew command trust >/dev/null 2>&1; then
+            brew trust --formula kazuakiyama/vlbi/pgplot
+            brew trust --formula kazuakiyama/vlbi/sched
+            brew trust --formula kazuakiyama/vlbi/difmap
+          fi
           brew config
 
       - name: Build PGPLOT

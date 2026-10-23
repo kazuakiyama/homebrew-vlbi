@@ -11,6 +11,18 @@ brew tap kazuakiyama/vlbi
 brew install kazuakiyama/vlbi/pgplot kazuakiyama/vlbi/sched kazuakiyama/vlbi/difmap
 ```
 
+If Homebrew requests formula trust, review the formulae and follow its
+instructions. On versions with `brew trust`, the individual commands are:
+
+```sh
+brew trust --formula kazuakiyama/vlbi/pgplot
+brew trust --formula kazuakiyama/vlbi/sched
+brew trust --formula kazuakiyama/vlbi/difmap
+```
+
+Then rerun the installation command. Older Homebrew versions may not have
+`brew trust` and do not need these commands.
+
 You can also install just SCHED or DIFMAP; PGPLOT is installed as a dependency.
 In zsh, use `nsched` to avoid the shell's built-in `sched` command.
 
