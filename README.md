@@ -84,9 +84,9 @@ explicitly so Intel installations do not build GCC 16 from source. SCHED also
 declares its JPL `SPLIT` routine as external to avoid the new GCC 16 intrinsic
 with the same name.
 
-GitHub Actions builds all three packages from source on macOS 15 for Apple
-Silicon and Intel, and runs DIFMAP's existing startup, expression, and help-file
-test. The published PGPLOT test has known Fortran/C output-comparison issues;
+GitHub Actions builds all three packages from source on macOS 15 and 26 for
+Apple Silicon, and macOS 15 for Intel. Each environment runs DIFMAP's existing
+startup, expression, and help-file test. The published PGPLOT test has known Fortran/C output-comparison issues;
 the published SCHED test is a failing placeholder. They are retained unchanged
 and are not run by this migration's workflow. Interactive X11 plotting and
 SCHED observation output are not validated by this workflow.
