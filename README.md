@@ -4,6 +4,13 @@ Homebrew formulae for PGPLOT, NRAO SCHED, and DIFMAP on macOS.
 This tap consolidates `kazuakiyama/pgplot`, `kazuakiyama/sched`, and
 `kazuakiyama/difmap`.
 
+## PGPLOT background
+
+PGPLOT was [removed from Homebrew due to licensing issues](https://github.com/Homebrew/discussions/discussions/533).
+This tap preserves the last Homebrew formula available before its removal,
+with minor modifications. You can install PGPLOT from this tap using the
+instructions below.
+
 ## Installation
 
 ```sh
