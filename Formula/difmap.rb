@@ -5,8 +5,17 @@ class Difmap < Formula
   version "2.5r"
   sha256 "0152e145c9a52ae29aaaf2d51380fa0199d4b7a14c9cdf0b6c8fe9884fb4fe7b"
 
+  revision 1
+
   depends_on "gawk"
-  depends_on "gcc"
+  # GCC 16 no longer has Intel macOS bottles; GCC 15 still does.
+  on_intel do
+    depends_on "gcc@15"
+  end
+
+  on_arm do
+    depends_on "gcc"
+  end
   depends_on "libx11"
   depends_on "kazuakiyama/vlbi/pgplot"
 
@@ -21,12 +30,17 @@ class Difmap < Formula
   end
 
   def install
+    fc = if Hardware::CPU.intel?
+      Formula["gcc@15"].opt_bin/"gfortran-15"
+    else
+      Formula["gcc"].opt_bin/"gfortran"
+    end
+    ENV["FC"] = fc.to_s
     ENV.fortran
     ENV.deparallelize
 
     # C Compiler
-    ENV.append "CC", "#{:gcc}"
-    ENV.append "CCOMPL", "#{:gcc}"
+    ENV["CCOMPL"] = ENV.cc
     
     # Compiler settings for PGPLOT
     pgplotlib = "-L#{HOMEBREW_PREFIX}/lib -lpgplot -lX11 -lpng"
@@ -36,6 +50,7 @@ class Difmap < Formula
     ENV.append "HELPDIR", "#{prefix}/help"
     
     # edit configure file
+    inreplace "configure", "FC=gfortran", "FC=#{fc}"
     inreplace "configure" do |s|
       s.change_make_var! "HELPDIR", "#{prefix}/help"
       s.change_make_var! "PGPLOT_LIB", pgplotlib

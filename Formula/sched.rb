@@ -4,9 +4,16 @@ class Sched < Formula
   url "ftp://ftp.aoc.nrao.edu/pub/sched/sched_11.8/sched_11.8.tar.gz"
   version "11.8"
   sha256 "d512af114da189accfb25a626737ae5efd065fd9cf7e21bfff838efc91feeea1"
-  revision 1
+  revision 2
 
-  depends_on "gcc"
+  # GCC 16 no longer has Intel macOS bottles; GCC 15 still does.
+  on_intel do
+    depends_on "gcc@15"
+  end
+
+  on_arm do
+    depends_on "gcc"
+  end
   depends_on "libx11"
   depends_on "kazuakiyama/vlbi/pgplot"
 
@@ -15,7 +22,16 @@ class Sched < Formula
   end
 
   def install
+    fc = if Hardware::CPU.intel?
+      Formula["gcc@15"].opt_bin/"gfortran-15"
+    else
+      Formula["gcc"].opt_bin/"gfortran"
+    end
+    ENV["FC"] = fc.to_s
     ENV.fortran
+
+    # GCC 16 adds a Fortran SPLIT intrinsic. Use SCHED's JPL routine instead.
+    inreplace "src/Jpl/state.f", "      SAVE\n", "      SAVE\n      EXTERNAL SPLIT\n"
     ENV.deparallelize
 
     pgplotdir = "#{HOMEBREW_PREFIX}/lib"
@@ -25,11 +41,11 @@ class Sched < Formula
     fflags = "-Wall -fimplicit-none -fno-backslash -fallow-argument-mismatch"
     
     on_intel do
-      system "cd src; make CFLAGS='-Dintel_osx #{cflags}' FFLAGS='-Dintel_osx #{fflags}' LPGPLOT='#{pgplotdir}' LDPGPLOT='#{pgplotlib}' XLD='#{xld}'"
+      system "cd src; make CC='#{ENV.cc}' FC='#{fc}' CFLAGS='-Dintel_osx #{cflags}' FFLAGS='-Dintel_osx #{fflags}' LPGPLOT='#{pgplotdir}' LDPGPLOT='#{pgplotlib}' XLD='#{xld}'"
     end
 
     on_arm do
-      system "cd src; make CFLAGS='-Darm_osx #{cflags}' FFLAGS='-Darm_osx #{fflags}' LPGPLOT='#{pgplotdir}' LDPGPLOT='#{pgplotlib}' XLD='#{xld}'"
+      system "cd src; make CC='#{ENV.cc}' FC='#{fc}' CFLAGS='-Darm_osx #{cflags}' FFLAGS='-Darm_osx #{fflags}' LPGPLOT='#{pgplotdir}' LDPGPLOT='#{pgplotlib}' XLD='#{xld}'"
     end
     
     system "cd bin/linux64gf; ln -s ./sched nsched"

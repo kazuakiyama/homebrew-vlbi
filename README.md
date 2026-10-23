@@ -66,7 +66,7 @@ SCHED's catalogs, setups, examples, and documentation are installed under
 
 ## Formula provenance and validation
 
-The initial formulae come from the published versions of the three old taps:
+The initial formulae were imported from the following published versions of the old taps; subsequent build fixes are recorded in this repository:
 
 | Formula | Version | Source commit |
 | --- | --- | --- |
@@ -77,6 +77,12 @@ The initial formulae come from the published versions of the three old taps:
 SCHED and DIFMAP explicitly depend on this tap's PGPLOT. Existing patch URLs
 remain pinned to commits in `hb-pgplot-patches` and `hb-difmap-patches`.
 Those repositories must remain available.
+
+Intel builds use GCC 15, which still has Homebrew bottles for macOS 15;
+Apple Silicon builds use the current GCC. The compiler paths are selected
+explicitly so Intel installations do not build GCC 16 from source. SCHED also
+declares its JPL `SPLIT` routine as external to avoid the new GCC 16 intrinsic
+with the same name.
 
 GitHub Actions builds all three packages from source on macOS 15 for Apple
 Silicon and Intel, and runs DIFMAP's existing startup, expression, and help-file

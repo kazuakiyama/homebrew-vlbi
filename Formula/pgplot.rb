@@ -6,10 +6,17 @@ class Pgplot < Formula
   mirror "https://gentoo.osuosl.org/distfiles/pgplot522.tar.gz"
   version "5.2.2"
   sha256 "a5799ff719a510d84d26df4ae7409ae61fe66477e3f1e8820422a9a4727a5be4"
-  revision 13
+  revision 14
 
   depends_on "gawk" # for makedocs (apparently system-defaul awk won't work after catalina)
-  depends_on "gcc"  # for gfortran
+  # GCC 16 no longer has Intel macOS bottles; GCC 15 still does.
+  on_intel do
+    depends_on "gcc@15"
+  end
+
+  on_arm do
+    depends_on "gcc"
+  end
   depends_on "libpng"
   depends_on "libx11"
 
@@ -32,6 +39,14 @@ class Pgplot < Formula
   patch :p0 do
     url "https://raw.githubusercontent.com/kazuakiyama/hb-pgplot-patches/5eba73c0f42daba2d6404550244cc74280d10c4a/patch-grfileio.c.diff"
     sha256 "83af4d3bce3c00dd97cd42628985d78e9c1783885bed1e7f46c6f91719439ab4"
+  end
+
+  def fortran_compiler
+    if Hardware::CPU.intel?
+      Formula["gcc@15"].opt_bin/"gfortran-15"
+    else
+      Formula["gcc"].opt_bin/"gfortran"
+    end
   end
 
   def install
@@ -58,7 +73,7 @@ class Pgplot < Formula
       ATHENA_INCL=""
       TK_INCL=""
       RV_INCL=""
-      FCOMPL="gfortran"
+      FCOMPL="#{fortran_compiler}"
       FFLAGC="-ffixed-line-length-none -fallow-argument-mismatch"
       FFLAGD=""
       CCOMPL="#{ENV.cc}"
@@ -71,13 +86,13 @@ class Pgplot < Formula
       TK_LIBS=""
       RANLIB="#{which "ranlib"}"
       SHARED_LIB="libpgplot.dylib"
-      SHARED_LD="gfortran -dynamiclib -single_module $LDFLAGS -lX11 -install_name libpgplot.dylib"
+      SHARED_LD="#{fortran_compiler} -dynamiclib -single_module $LDFLAGS -lX11 -install_name libpgplot.dylib"
       SHARED_LIB_LIBS="#{ENV.ldflags} -lpng -lX11"
       MCOMPL=""
       MFLAGC=""
       SYSDIR="$SYSDIR"
       CSHARED_LIB="libcpgplot.dylib"
-      CSHARED_LD="gfortran -dynamiclib -single_module $LDFLAGS -lX11"
+      CSHARED_LD="#{fortran_compiler} -dynamiclib -single_module $LDFLAGS -lX11"
     EOS
 
     mkdir "build" do
@@ -127,7 +142,7 @@ class Pgplot < Formula
          CALL PGCLOS
          END
     EOS
-    system "gfortran", "-o", "pgtest", "pgtest.f90", "-L#{lib}", "-lpgplot"
+    system fortran_compiler, "-o", "pgtest", "pgtest.f90", "-L#{lib}", "-lpgplot"
 
     # build C version of test program
     (testpath/"cpgtest.c").write <<~EOS
@@ -159,7 +174,7 @@ class Pgplot < Formula
               }
     EOS
     system ENV.cc, "-c", "-I#{include}", "cpgtest.c"
-    system "gfortran", "-o", "cpgtest", "cpgtest.o",
+    system fortran_compiler, "-o", "cpgtest", "cpgtest.o",
            "-L#{lib}", "-lcpgplot", "-lpgplot"
 
     # Produce PNG output with both programs and check if identical
