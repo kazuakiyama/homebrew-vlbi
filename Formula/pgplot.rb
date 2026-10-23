@@ -121,16 +121,19 @@ class Pgplot < Formula
   end
 
   test do
+    ENV["PGPLOT_DIR"] = share.to_s
+
     # build Fortran version of test program
     (testpath/"pgtest.f90").write <<~EOS
          PROGRAM SIMPLE
-         INTEGER I, IER, PGBEG
+         IMPLICIT NONE
+         INTEGER I, IER, PGOPEN
          REAL XR(100), YR(100)
          REAL XS(5), YS(5)
          data XS/1.,2.,3.,4.,5./
          data YS/1.,4.,9.,16.,25./
          IER = PGOPEN('pgtest.png/PNG')
-         IF (IER.LE.0) STOP
+         IF (IER.LE.0) STOP 1
          CALL PGENV(0.,10.,0.,20.,0,1)
          CALL PGLAB('(x)', '(y)', 'A Simple Graph')
          CALL PGPT(5,XS,YS,9)
@@ -165,7 +168,7 @@ class Pgplot < Formula
                 cpglab("(x)", "(y)", "A Simple Graph");
                 cpgpt(5, xs, ys, 9);
                 for(i=0; i<n; i++) {
-                  xr[i] = 0.1*i;
+                  xr[i] = 0.1f*(i+1);
                   yr[i] = xr[i]*xr[i];
                 }
                 cpgline(n, xr, yr);
@@ -180,8 +183,14 @@ class Pgplot < Formula
     # Produce PNG output with both programs and check if identical
     system "./pgtest"
     system "./cpgtest"
-    assert_predicate testpath/"pgtest.png", :exist?
-    assert_predicate testpath/"cpgtest.png", :exist?
-    assert_equal (testpath/"pgtest.png").read, (testpath/"cpgtest.png").read
+    %w[pgtest.png cpgtest.png].each do |filename|
+      png = (testpath/filename).binread
+      assert_equal "\x89PNG\r\n\x1a\n".b, png.byteslice(0, 8)
+      assert_equal "IHDR", png.byteslice(12, 4)
+      width, height = png.byteslice(16, 8).unpack("N2")
+      assert_operator width, :>, 0
+      assert_operator height, :>, 0
+    end
+    assert_equal (testpath/"pgtest.png").binread, (testpath/"cpgtest.png").binread
   end
 end

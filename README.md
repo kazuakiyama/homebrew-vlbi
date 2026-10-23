@@ -61,7 +61,7 @@ report the migration problem in this repository's Issues.
 Add the settings you need to `~/.zshrc` or `~/.bash_profile`:
 
 ```sh
-export PGPLOT_DIR="$(brew --prefix pgplot)/share/pgplot"
+export PGPLOT_DIR="$(brew --prefix pgplot)/share"
 export PGPLOT_DEV=/xwin
 export SCHED="$(brew --prefix sched)"
 ```
@@ -92,11 +92,17 @@ declares its JPL `SPLIT` routine as external to avoid the new GCC 16 intrinsic
 with the same name.
 
 GitHub Actions builds all three packages from source on macOS 15 and 26 for
-Apple Silicon, and macOS 15 for Intel. Each environment runs DIFMAP's existing
-startup, expression, and help-file test. The published PGPLOT test has known Fortran/C output-comparison issues;
-the published SCHED test is a failing placeholder. They are retained unchanged
-and are not run by this migration's workflow. Interactive X11 plotting and
-SCHED observation output are not validated by this workflow.
+Apple Silicon, and macOS 15 for Intel. Each environment runs these tests:
+
+- PGPLOT: compile Fortran and C programs that draw the same graph, check the
+  PNG signatures and dimensions, and compare their output within the same run.
+- SCHED: process the bundled `manual_1.key` example without opening an X11
+  window, then check successful completion, the project summary, VEX header,
+  experiment name, and scheduling scans. Also check the `nsched` executable.
+- DIFMAP: run the existing startup, expression, and help-file test.
+
+These tests do not exercise interactive X11 windows or validate schedules
+for an actual observation.
 
 ## Support
 

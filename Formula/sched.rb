@@ -80,6 +80,19 @@ class Sched < Formula
   end
 
   test do
-    system "false"
+    ENV["SCHED"] = prefix.to_s
+    ENV["PGPLOT_DIR"] = Formula["kazuakiyama/vlbi/pgplot"].opt_share.to_s
+    ENV["PGPLOT_DEV"] = "/null"
+
+    # Fortran STOP may return success on error, so verify the generated schedule.
+    output = pipe_output("#{bin}/sched", (prefix/"examples/manual_1.key").read, 0)
+    assert_match "Finished", output
+    assert_match "SUMMARY FILE FOR PROJECT: BE001", (testpath/"be001.sum").read
+    vex = (testpath/"be001.vex").read
+    assert_match "VEX_rev = 1.5;", vex
+    assert_match "exper_name = BE001;", vex
+    assert_match "$SCHED;", vex
+    assert_match(/^scan \S+;/, vex)
+    assert_predicate bin/"nsched", :executable?
   end
 end
